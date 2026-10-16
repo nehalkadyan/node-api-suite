@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const connectDB = async (customUri) => {
   try {
-    const connUri = customUri || process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/mru_fsd_books';
+    const connUri = customUri || process.env.MONGO_URI;
     const conn = await mongoose.connect(connUri);
     console.log(`MongoDB Connected: ${conn.connection.host}`);
     return conn;

@@ -1,5 +1,6 @@
 const Book = require('../models/Book');
 const User = require('../models/User');
+const redisClient = require("../utils/redisClient")
 
 // @desc    Store a single book (or multiple if array is passed)
 // @route   POST /api/books
@@ -106,6 +107,8 @@ const storeBooks = async (req, res, next) => {
 // @desc    Get all books
 // @route   GET /api/books
 // @access  Public
+
+// use catching mechanism
 const getAllBooks = async (req, res, next) => {
   try {
     const { genre, inStock, includeAuthor } = req.query;
@@ -141,6 +144,10 @@ const getAllBooks = async (req, res, next) => {
 // @desc    Get all books with full author details populated
 // @route   GET /api/books/with-author
 // @access  Public
+
+// caching mechanism
+// time - 1s
+// time - 0.1s
 const getAllBooksWithAuthor = async (req, res, next) => {
   try {
     const books = await Book.find()

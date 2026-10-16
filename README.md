@@ -44,9 +44,12 @@ A full-featured, modular RESTful API built with **Express 5**, **Mongoose**, **J
 │   │   └── Book.js            # Book Mongoose schema with author reference
 │   └── routes/
 │       ├── authRoutes.js      # /api/auth routes
-│       └── bookRoutes.js      # /api/books routes
-├── tests/
-│   └── api.test.js            # Complete automated integration tests
+│   └── tests/
+│       ├── dbHandler.js       # In-memory MongoMemoryServer lifecycle manager
+│       ├── auth.test.js       # Authentication tests (APIs 1 - 3)
+│       ├── books.test.js      # Book management tests (APIs 4 - 8)
+│       └── app.test.js        # Health check & 404 handler tests
+├── jest.config.js             # Jest test runner configuration
 ├── .env.example               # Environment variables template
 ├── .env                       # Local environment configuration
 ├── api-requests.http          # Interactive HTTP requests for REST Client / Thunder Client
