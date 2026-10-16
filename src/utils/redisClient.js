@@ -1,7 +1,7 @@
 // import redis
 
 const redis = require("ioredis")
-
+// Redis in an in memory db - store data in the server's memory temporarily
 // setup
 
 const redisClient = new redis({

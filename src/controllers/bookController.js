@@ -150,9 +150,30 @@ const getAllBooks = async (req, res, next) => {
 // time - 0.1s
 const getAllBooksWithAuthor = async (req, res, next) => {
   try {
+
+    // step 1 - create key
+
+    const key = `books-data`
+
+    // step 2 - check if data exists in the key - get() method
+
+    const cachedData = await redisClient.get(key)
+
+    // cachedData = "{hfdvhjfghjdw}" -> {}
+    // step 3 - if data exists in the memory, send that data
+    // parse the data into json format before sending it as response
+
+    if (cachedData) {
+      const parsedData = JSON.parse(cachedData)
+      return res.status(200).json({ message: "Books Data with Author Data fetched from Redis", data: parsedData })
+    }
+
     const books = await Book.find()
       .populate('author', 'name email role bio createdAt')
       .sort({ createdAt: -1 });
+
+    await redisClient.set(key, JSON.stringify(books), "EX", 60)
+    // books-data :"[{...}]""
 
     res.status(200).json({
       success: true,
