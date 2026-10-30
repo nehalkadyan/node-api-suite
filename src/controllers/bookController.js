@@ -45,6 +45,15 @@ const storeSingleBook = async (req, res, next) => {
       author: authorId,
     });
 
+    // Invalidate books cache
+    if (redisClient && typeof redisClient.del === 'function') {
+      try {
+        await redisClient.del('books-data');
+      } catch (err) {
+        // Ignore cache invalidation error
+      }
+    }
+
     res.status(201).json({
       success: true,
       message: 'Book created successfully',
@@ -92,6 +101,15 @@ const storeBooks = async (req, res, next) => {
     }
 
     const insertedBooks = await Book.insertMany(preparedBooks);
+
+    // Invalidate books cache
+    if (redisClient && typeof redisClient.del === 'function') {
+      try {
+        await redisClient.del('books-data');
+      } catch (err) {
+        // Ignore cache invalidation error
+      }
+    }
 
     res.status(201).json({
       success: true,
@@ -150,30 +168,46 @@ const getAllBooks = async (req, res, next) => {
 // time - 0.1s
 const getAllBooksWithAuthor = async (req, res, next) => {
   try {
-
     // step 1 - create key
-
-    const key = `books-data`
+    const key = `books-data`;
 
     // step 2 - check if data exists in the key - get() method
+    let cachedData = null;
+    if (redisClient && typeof redisClient.get === 'function') {
+      try {
+        cachedData = await redisClient.get(key);
+      } catch (err) {
+        // Redis get failed or offline, fall back to database
+      }
+    }
 
-    const cachedData = await redisClient.get(key)
-
-    // cachedData = "{hfdvhjfghjdw}" -> {}
     // step 3 - if data exists in the memory, send that data
     // parse the data into json format before sending it as response
-
     if (cachedData) {
-      const parsedData = JSON.parse(cachedData)
-      return res.status(200).json({ message: "Books Data with Author Data fetched from Redis", data: parsedData })
+      try {
+        const parsedData = JSON.parse(cachedData);
+        return res.status(200).json({
+          success: true,
+          count: parsedData.length,
+          message: 'Fetched all books with author details successfully',
+          data: parsedData,
+        });
+      } catch (err) {
+        // Fall back to database if cached data is malformed
+      }
     }
 
     const books = await Book.find()
       .populate('author', 'name email role bio createdAt')
       .sort({ createdAt: -1 });
 
-    await redisClient.set(key, JSON.stringify(books), "EX", 60)
-    // books-data :"[{...}]""
+    if (redisClient && typeof redisClient.set === 'function') {
+      try {
+        await redisClient.set(key, JSON.stringify(books), 'EX', 60);
+      } catch (err) {
+        // Ignore cache save error if Redis is offline
+      }
+    }
 
     res.status(200).json({
       success: true,
